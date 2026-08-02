@@ -78,9 +78,12 @@ tbody tr:hover{background:#e9f7ef}
 </div>
 <script>
 let currentUser = null;
+const API_BASE = window.location.hostname.includes('onrender.com')
+  ? window.location.origin
+  : (window.location.port === '5000' ? '' : 'http://127.0.0.1:5000');
 
 async function fetchJSON(url, options = {}) {
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE}${url}`, {
     headers: {
       'Content-Type': 'application/json',
       ...(options.headers || {})

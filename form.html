@@ -620,9 +620,12 @@ Growtech Nurseries © 2026 | Tray Tracking Management System
 
 let editId = null;
 let currentUser = null;
+const API_BASE = window.location.hostname.includes('onrender.com')
+  ? window.location.origin
+  : (window.location.port === '5000' ? '' : 'http://127.0.0.1:5000');
 
 async function fetchJSON(url, options = {}) {
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE}${url}`, {
     headers: {
       'Content-Type': 'application/json',
       ...(options.headers || {})
@@ -810,8 +813,12 @@ async function loadUsers() {
           </select>
         </td>
         <td>
-          <button class="action-btn edit-btn" onclick="updateUserRole(${user.id})">Update Role</button>
-          ${deleteButton}
+          <input type="password" id="password-${user.id}" placeholder="New password" style="padding:8px 10px;border:1px solid #ccc;border-radius:8px;margin-bottom:8px;width:150px;">
+          <div>
+            <button class="action-btn edit-btn" onclick="updateUserRole(${user.id})">Update Role</button>
+            <button class="action-btn edit-btn" onclick="updateUserPassword(${user.id})">Change Password</button>
+            ${deleteButton}
+          </div>
         </td>
       `;
       usersTableBody.appendChild(row);
@@ -928,6 +935,32 @@ async function updateUserRole(id) {
       body: JSON.stringify({ role: nextRole })
     });
     await loadUsers();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function updateUserPassword(id) {
+  if (!currentUser || currentUser.role !== 'admin') {
+    alert('Only admins can manage users.');
+    return;
+  }
+
+  const passwordInput = document.getElementById(`password-${id}`);
+  const nextPassword = passwordInput.value.trim();
+
+  if (!nextPassword) {
+    alert('Enter a new password before changing it.');
+    return;
+  }
+
+  try {
+    await fetchJSON(`/api/users/${id}/password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ password: nextPassword })
+    });
+    passwordInput.value = '';
+    alert('Password updated successfully.');
   } catch (error) {
     alert(error.message);
   }

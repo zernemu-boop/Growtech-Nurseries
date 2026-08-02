@@ -13,6 +13,14 @@ app.secret_key = 'growtech-tray-secret'
 DB_PATH = os.path.join(os.path.dirname(__file__), 'app.db')
 
 
+@app.after_request
+def _add_cors_headers(response: Any) -> Any:
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, DELETE, OPTIONS'
+    return response
+
+
 def connect_db() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -240,6 +248,25 @@ def update_user(user_id: int) -> Any:
     conn.commit()
     conn.close()
     return jsonify({'message': 'User role updated successfully'})
+
+
+@app.patch('/api/users/<int:user_id>/password')
+def update_user_password(user_id: int) -> Any:
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+
+    payload = request.get_json(silent=True) or {}
+    password = (payload.get('password') or '').strip()
+
+    if not password:
+        return jsonify({'message': 'A new password is required.'}), 400
+
+    conn = connect_db()
+    conn.execute('UPDATE users SET password = ? WHERE id = ?', (generate_password_hash(password), user_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'User password updated successfully'})
 
 
 @app.delete('/api/users/<int:user_id>')
