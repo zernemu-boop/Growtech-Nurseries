@@ -47,9 +47,8 @@ tbody tr:hover{background:#e9f7ef}
 </div>
 </div>
 <div class="login-panel">
-  <input type="text" id="usernameInput" placeholder="Username">
-  <input type="password" id="passwordInput" placeholder="Password">
-  <button class="save-btn" type="button" id="loginBtn">Login</button>
+  <input type="text" id="usernameInput" placeholder="Session user">
+  <button class="save-btn" type="button" id="loginBtn">Use Session</button>
   <button class="logout-btn" type="button" id="logoutBtn" style="display:none;">Logout</button>
   <button type="button" class="user-chip" id="currentUser">Not signed in</button>
 </div>
@@ -95,20 +94,17 @@ async function fetchJSON(url, options = {}) {
 }
 
 async function loginUser() {
-  const username = document.getElementById('usernameInput').value.trim();
-  const password = document.getElementById('passwordInput').value;
-  if (!username || !password) { alert('Enter both username and password.'); return; }
   try {
-    const data = await fetchJSON('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    const data = await fetchJSON('/api/me');
     currentUser = data.user;
+    document.getElementById('usernameInput').value = currentUser.username;
     document.getElementById('currentUser').textContent = `Signed in as ${currentUser.username}`;
     document.getElementById('logoutBtn').style.display = 'inline-block';
     document.getElementById('loginBtn').style.display = 'none';
     document.getElementById('usernameInput').style.display = 'none';
-    document.getElementById('passwordInput').style.display = 'none';
     await loadDashboard();
   } catch (error) {
-    alert(error.message);
+    alert('Please sign in on the main Growtech form first, then open the admin dashboard.');
   }
 }
 
@@ -120,7 +116,7 @@ async function logoutUser() {
     document.getElementById('logoutBtn').style.display = 'none';
     document.getElementById('loginBtn').style.display = 'inline-block';
     document.getElementById('usernameInput').style.display = 'inline-block';
-    document.getElementById('passwordInput').style.display = 'inline-block';
+    document.getElementById('usernameInput').value = '';
     await loadDashboard();
   } catch (error) {
     alert(error.message);
@@ -135,10 +131,10 @@ async function getCurrentUser() {
     document.getElementById('logoutBtn').style.display = 'inline-block';
     document.getElementById('loginBtn').style.display = 'none';
     document.getElementById('usernameInput').style.display = 'none';
-    document.getElementById('passwordInput').style.display = 'none';
   } catch (error) {
     currentUser = null;
     document.getElementById('currentUser').textContent = 'Not signed in';
+    document.getElementById('usernameInput').value = '';
   }
 }
 
