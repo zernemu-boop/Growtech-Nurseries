@@ -84,15 +84,30 @@ const API_BASE = window.location.hostname.includes('onrender.com')
 
 async function fetchJSON(url, options = {}) {
   const response = await fetch(`${API_BASE}${url}`, {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(options.headers || {})
     },
     ...options
   });
+
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
-  if (!response.ok) throw new Error(data.message || 'Request failed');
+  const contentType = response.headers.get('Content-Type') || '';
+  let data = {};
+
+  if (text) {
+    if (contentType.includes('application/json')) {
+      data = JSON.parse(text);
+    } else {
+      data = { message: text };
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Request failed');
+  }
+
   return data;
 }
 
